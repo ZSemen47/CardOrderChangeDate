@@ -118,6 +118,21 @@ public class CardOrderDeliveryTest {
     }
 
     @Test
+    void notAcceptValideName() {
+        RegistrationInfo newUser = DateGenerator.randomUser("ru");
+        $("[data-test-id='city'] [placeholder='Город']").setValue(newUser.getCity());
+        $("[data-test-id='date'] [placeholder='Дата встречи']")
+                .doubleClick().sendKeys(newUser.getDate());
+        $("[data-test-id='name'] input").setValue("АлЁна");
+        $("[data-test-id='phone'] input").setValue(newUser.getPhone());
+        $(".checkbox__box").click();
+        $(".grid-row .button__text").shouldHave(Condition.exactText("Запланировать")).click();
+        $("[data-test-id='name'] .input__sub")
+                .shouldHave(Condition.exactText("Имя и Фамилия указаные неверно. " +
+                        "Допустимы только русские буквы, пробелы и дефисы."));
+    }
+
+    @Test
     void notAcceptInvalidName() {
         RegistrationInfo newUser = DateGenerator.randomUser("ru");
         $("[data-test-id='city'] [placeholder='Город']").setValue(newUser.getCity());
