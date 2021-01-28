@@ -104,6 +104,27 @@ public class CardOrderDeliveryTest {
     }
 
     @Test
+    void acceptInvalidPhone() {
+        RegistrationInfo newUser = DateGenerator.randomUser("ru");
+        $("[data-test-id='city'] [placeholder='Город']").setValue(newUser.getCity());
+        $("[data-test-id='date'] [placeholder='Дата встречи']")
+                .doubleClick().sendKeys(newUser.getDate());
+        $("[data-test-id='name'] input").setValue(newUser.getName());
+        $("[data-test-id='phone'] input").setValue("+8800");
+        $(".checkbox__box").click();
+        $(".grid-row .button__text").shouldHave(Condition.exactText("Запланировать")).click();
+        $("[data-test-id='phone'] .input__sub")
+                .shouldHave(Condition.exactText("На указанный номер моб. тел. будет отправлен смс-код " +
+                        "для подтверждения заявки на карту. Проверьте, что номер ваш и введен " +
+                        "корректно."));
+        $("[data-test-id='success-notification'] .notification__title")
+                .waitUntil(Condition.visible, 15000)
+                .shouldHave(Condition.exactText("Успешно!"));
+        $("[data-test-id='success-notification'] .notification__content")
+                .shouldHave(Condition.exactText("Встреча успешно запланирована на " + newUser.getDate()));
+    }
+
+    @Test
     void dateInvalid() {
         RegistrationInfo newUser = DateGenerator.randomUser("ru");
         $("[data-test-id='city'] [placeholder='Город']").setValue(newUser.getCity());
