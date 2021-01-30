@@ -10,7 +10,7 @@ import java.util.Random;
 
 
 public class DateGenerator {
-    private DateGenerator() {
+    public DateGenerator() {
     }
 
     private static LocalDate time = LocalDate.now();
