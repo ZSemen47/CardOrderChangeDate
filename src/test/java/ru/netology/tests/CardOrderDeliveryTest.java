@@ -4,11 +4,13 @@ import com.codeborne.selenide.Condition;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import ru.netology.data.RegistrationInfo;
-import ru.netology.generator.DateGenerator;
+import ru.netology.generator.DataGenerator;
+
+import java.time.Duration;
 
 import static com.codeborne.selenide.Selenide.$;
 import static com.codeborne.selenide.Selenide.open;
-import static ru.netology.generator.DateGenerator.*;
+import static ru.netology.generator.DataGenerator.*;
 
 public class CardOrderDeliveryTest {
     @BeforeEach
@@ -18,167 +20,145 @@ public class CardOrderDeliveryTest {
 
     @Test
     void shouldAcceptOrder() {
-        RegistrationInfo newUser = DateGenerator.randomUser("ru");
+        RegistrationInfo newUser = DataGenerator.randomUser("ru");
         $("[data-test-id='city'] [placeholder='Город']").setValue(newUser.getCity());
         $("[data-test-id='date'] [placeholder='Дата встречи']")
-                .doubleClick().sendKeys(newUser.getDate());
+                .doubleClick().sendKeys(calculatedDate(3,1));
         $("[data-test-id='name'] input").setValue(newUser.getName());
         $("[data-test-id='phone'] input").setValue(newUser.getPhone());
         $(".checkbox__box").click();
-        $(".grid-row .button__text").shouldHave(Condition.exactText("Запланировать")).click();
+        $(".grid-row .button__text").shouldHave(Condition.exactText("Запланировать"))
+                .click();
         $("[data-test-id='success-notification'] .notification__title")
-                .waitUntil(Condition.visible, 15000)
+                .shouldBe(Condition.visible, Duration.ofMillis(15000))
                 .shouldHave(Condition.exactText("Успешно!"));
         $("[data-test-id='success-notification'] .notification__content")
-                .shouldHave(Condition.exactText("Встреча успешно запланирована на " + newUser.getDate()));
+                .shouldHave(Condition.exactText("Встреча успешно запланирована на "
+                        + calculatedDate(3,1)));
     }
 
     @Test
     void shouldChangeOrder() {
-        RegistrationInfo newUser = DateGenerator.randomUser("ru");
+        RegistrationInfo newUser = DataGenerator.randomUser("ru");
         $("[data-test-id='city'] [placeholder='Город']").setValue(newUser.getCity());
         $("[data-test-id='date'] [placeholder='Дата встречи']")
-                .doubleClick().sendKeys(newUser.getDate());
+                .doubleClick().sendKeys(calculatedDate(3,1));
         $("[data-test-id='name'] input").setValue(newUser.getName());
         $("[data-test-id='phone'] input").setValue(newUser.getPhone());
         $(".checkbox__box").click();
-        $(".grid-row .button__text").shouldHave(Condition.exactText("Запланировать")).click();
+        $(".grid-row .button__text").shouldHave(Condition.exactText("Запланировать"))
+                .click();
         $("[data-test-id='success-notification'] .notification__title")
                 .waitUntil(Condition.visible, 15000)
                 .shouldHave(Condition.exactText("Успешно!"));
         $("[data-test-id='success-notification'] .notification__content")
-                .shouldHave(Condition.exactText("Встреча успешно запланирована на " + newUser.getDate()));
+                .shouldHave(Condition.exactText("Встреча успешно запланирована на "
+                        + calculatedDate(3,1)));
         $("[data-test-id='date'] [placeholder='Дата встречи']")
-                .doubleClick().sendKeys(newUser.getDate());
+                .doubleClick().sendKeys(calculatedDate(10,1));
         $(".grid-row .button__text").click();
         $("[data-test-id='replan-notification'] .notification__title")
                 .shouldHave(Condition.exactText("Необходимо подтверждение"));
         $("[data-test-id='replan-notification'] .button__text")
                 .click();
         $("[data-test-id=success-notification] .notification__content")
-                .waitUntil(Condition.visible, 15000)
+                .shouldBe(Condition.visible, Duration.ofMillis(15000))
                 .shouldHave(Condition.exactText("Встреча успешно запланирована на "
-                        + newUser.getDate()));
+                        + calculatedDate(10,1)));
     }
 
     @Test
-    void emptyCity() {
-        RegistrationInfo newUser = DateGenerator.randomUser("ru");
-        $("[data-test-id='city'] [placeholder='Город']").setValue(generateEmptyName());
+    void notAcceptEmptyCity() {
+        RegistrationInfo newUser = DataGenerator.randomUser("ru");
+        $("[data-test-id='city'] [placeholder='Город']").setValue(generateEmptyField());
         $("[data-test-id='date'] [placeholder='Дата встречи']")
-                .doubleClick().sendKeys(newUser.getDate());
+                .doubleClick().sendKeys(calculatedDate(5,20));
         $("[data-test-id='name'] input").setValue(newUser.getName());
         $("[data-test-id='phone'] input").setValue(newUser.getPhone());
         $(".checkbox__box").click();
-        $(".grid-row .button__text").shouldHave(Condition.exactText("Запланировать")).click();
+        $(".grid-row .button__text").shouldHave(Condition.exactText("Запланировать"))
+                .click();
         $(".input_invalid .input__sub")
                 .shouldHave(Condition.exactText("Поле обязательно для заполнения"));
     }
 
     @Test
     void cityNotAvailable() {
-        RegistrationInfo newUser = DateGenerator.randomUser("ru");
-        $("[data-test-id='city'] [placeholder='Город']").setValue(generateInvalidCity());
+        RegistrationInfo newUser = DataGenerator.randomUser("ru");
+        $("[data-test-id='city'] [placeholder='Город']")
+                .setValue(generateNotAvailableCity());
         $("[data-test-id='date'] [placeholder='Дата встречи']")
-                .doubleClick().sendKeys(newUser.getDate());
+                .doubleClick().sendKeys(calculatedDate(5,6));
         $("[data-test-id='name'] input").setValue(newUser.getName());
         $("[data-test-id='phone'] input").setValue(newUser.getPhone());
         $(".checkbox__box").click();
-        $(".grid-row .button__text").shouldHave(Condition.exactText("Запланировать")).click();
+        $(".grid-row .button__text").shouldHave(Condition.exactText("Запланировать"))
+                .click();
         $(".input_invalid .input__sub")
                 .shouldHave(Condition.exactText("Доставка в выбранный город недоступна"));
     }
 
     @Test
     void notAcceptInvalidPhone() {
-        RegistrationInfo newUser = DateGenerator.randomUser("ru");
+        RegistrationInfo newUser = DataGenerator.randomUser("ru");
         $("[data-test-id='city'] [placeholder='Город']").setValue(newUser.getCity());
         $("[data-test-id='date'] [placeholder='Дата встречи']")
-                .doubleClick().sendKeys(newUser.getDate());
+                .doubleClick().sendKeys(calculatedDate(3,10));
         $("[data-test-id='name'] input").setValue(newUser.getName());
         $("[data-test-id='phone'] input").setValue(generateInvalidPhone());
         $(".checkbox__box").click();
-        $(".grid-row .button__text").shouldHave(Condition.exactText("Запланировать")).click();
+        $(".grid-row .button__text").shouldHave(Condition.exactText("Запланировать"))
+                .click();
         $("[data-test-id='phone'] .input__sub")
                 .shouldHave(Condition.exactText("Поле обязательно для заполнения"));
     }
 
     @Test
-    void acceptInvalidPhone() {
-        RegistrationInfo newUser = DateGenerator.randomUser("ru");
+    void orderImpossibleOnThisDate() {
+        RegistrationInfo newUser = DataGenerator.randomUser("ru");
         $("[data-test-id='city'] [placeholder='Город']").setValue(newUser.getCity());
         $("[data-test-id='date'] [placeholder='Дата встречи']")
-                .doubleClick().sendKeys(newUser.getDate());
+                .doubleClick().sendKeys(calculatedDate(0,1));
         $("[data-test-id='name'] input").setValue(newUser.getName());
-        $("[data-test-id='phone'] input").setValue("+8800");
+        $("[data-test-id='phone'] input").setValue(newUser.getPhone());
         $(".checkbox__box").click();
-        $(".grid-row .button__text").shouldHave(Condition.exactText("Запланировать")).click();
-        $("[data-test-id='phone'] .input__sub")
-                .shouldHave(Condition.exactText("На указанный номер моб. тел. будет отправлен смс-код " +
-                        "для подтверждения заявки на карту. Проверьте, что номер ваш и введен " +
-                        "корректно."));
+        $(".grid-row .button__text").shouldHave(Condition.exactText("Запланировать"))
+                .click();
+        $("[data-test-id='date'] .input_invalid .input__sub")
+                .shouldHave(Condition.exactText("Заказ на выбранную дату невозможен"));
+    }
+
+    @Test
+    void notAcceptValidName() {
+        RegistrationInfo newUser = DataGenerator.randomUser("ru");
+        $("[data-test-id='city'] [placeholder='Город']").setValue(newUser.getCity());
+        $("[data-test-id='date'] [placeholder='Дата встречи']")
+                .doubleClick().sendKeys(calculatedDate(3,1));
+        $("[data-test-id='name'] input").setValue(generateProblematicName());
+        $("[data-test-id='phone'] input").setValue(newUser.getPhone());
+        $(".checkbox__box").click();
+        $(".grid-row .button__text").shouldHave(Condition.exactText("Запланировать"))
+                .click();
         $("[data-test-id='success-notification'] .notification__title")
-                .waitUntil(Condition.visible, 15000)
+                .shouldBe(Condition.visible, Duration.ofMillis(15000))
                 .shouldHave(Condition.exactText("Успешно!"));
         $("[data-test-id='success-notification'] .notification__content")
-                .shouldHave(Condition.exactText("Встреча успешно запланирована на " + newUser.getDate()));
-    }
-
-    @Test
-    void dateInvalid() {
-        RegistrationInfo newUser = DateGenerator.randomUser("ru");
-        $("[data-test-id='city'] [placeholder='Город']").setValue(newUser.getCity());
-        $("[data-test-id='date'] [placeholder='Дата встречи']")
-                .doubleClick().sendKeys(newUser.getDate());
-        $("[data-test-id='name'] input").setValue(newUser.getName());
-        $("[data-test-id='phone'] input").setValue(newUser.getPhone());
-        $(".checkbox__box").click();
-        $(".grid-row .button__text").shouldHave(Condition.exactText("Запланировать")).click();
-        $("[data-test-id='date'] .input_invalid .input__sub")
-                .shouldHave(Condition.exactText("Неверно введена дата"));
-    }
-
-    @Test
-    void notAcceptValideName() {
-        RegistrationInfo newUser = DateGenerator.randomUser("ru");
-        $("[data-test-id='city'] [placeholder='Город']").setValue(newUser.getCity());
-        $("[data-test-id='date'] [placeholder='Дата встречи']")
-                .doubleClick().sendKeys(newUser.getDate());
-        $("[data-test-id='name'] input").setValue("АлЁна");
-        $("[data-test-id='phone'] input").setValue(newUser.getPhone());
-        $(".checkbox__box").click();
-        $(".grid-row .button__text").shouldHave(Condition.exactText("Запланировать")).click();
-        $("[data-test-id='name'] .input__sub")
-                .shouldHave(Condition.exactText("Имя и Фамилия указаные неверно. " +
-                        "Допустимы только русские буквы, пробелы и дефисы."));
-    }
-
-    @Test
-    void notAcceptInvalidName() {
-        RegistrationInfo newUser = DateGenerator.randomUser("ru");
-        $("[data-test-id='city'] [placeholder='Город']").setValue(newUser.getCity());
-        $("[data-test-id='date'] [placeholder='Дата встречи']")
-                .doubleClick().sendKeys(newUser.getDate());
-        $("[data-test-id='name'] input").setValue(generateInvalidName());
-        $("[data-test-id='phone'] input").setValue(newUser.getPhone());
-        $(".checkbox__box").click();
-        $(".grid-row .button__text").shouldHave(Condition.exactText("Запланировать")).click();
-        $("[data-test-id='name'] .input__sub")
-                .shouldHave(Condition.exactText("Имя и Фамилия указаные неверно. " +
-                        "Допустимы только русские буквы, пробелы и дефисы."));
+                .shouldHave(Condition.exactText("Встреча успешно запланирована на "
+                        + calculatedDate(3,1)));
     }
 
     @Test
     void checkboxIsEmpty() {
-        RegistrationInfo newUser = DateGenerator.randomUser("ru");
+        RegistrationInfo newUser = DataGenerator.randomUser("ru");
         $("[data-test-id='city'] [placeholder='Город']").setValue(newUser.getCity());
         $("[data-test-id='date'] [placeholder='Дата встречи']")
-                .doubleClick().sendKeys(newUser.getDate());
+                .doubleClick().sendKeys(calculatedDate(6,4));
         $("[data-test-id='name'] input").setValue(newUser.getName());
         $("[data-test-id='phone'] input").setValue(newUser.getPhone());
-        $(".grid-row .button__text").shouldHave(Condition.exactText("Запланировать")).click();
+        $(".grid-row .button__text").shouldHave(Condition.exactText("Запланировать"))
+                .click();
         $(".input_invalid[data-test-id='agreement']")
-                .shouldHave(Condition.exactText("Я соглашаюсь с условиями обработки и использования моих" +
-                        " персональных данных"));
+                .shouldHave(Condition.exactText("Я соглашаюсь с условиями обработки и" +
+                        " использования моих персональных данных"));
     }
 }
